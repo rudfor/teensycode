@@ -17,7 +17,7 @@ boolean gpvol4 = 0;
 boolean gpvol5 = 0;
 boolean gpvol6 = 0;
 
-setMute(){
+void setMute(bool mute, int &volume_old, Adafruit_ST7735 &tft, bool force = false){
   
   }
 

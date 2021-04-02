@@ -183,6 +183,9 @@ void setup() {
   mcpK.digitalWrite(buttonCounter, HIGH);
 
 mcpV.digitalWrite(7, LOW);
+delay(100);
+setVol(0,volume_old,tft2);
+setChannel(true,activeChannel,tft2,true);
 //digitalWrite(gpmutepin, LOW);
 pos = digitalRead(VOLUPPIN);
 }
@@ -292,6 +295,7 @@ void loop() {
     //digitalWrite(33, LOW);
     mcpK.digitalWrite(7, LOW);
     tft2.fillScreen(ST7735_BLACK);
+    tft2.setRotation(3);
     delay(20);
     setChannel(true,activeChannel,tft2,true);
     setVol(volume,volume_old,tft2,true);
