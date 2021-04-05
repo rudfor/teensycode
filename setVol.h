@@ -9,6 +9,7 @@
 
 float textColor = 0x5ADF;
 Adafruit_MCP23008 mcpV;                             //Initiate MCP23008 for Volume attinuation
+bool isMute = false;
 
 boolean gpvol1 = 0;                                 //Variables for relay calculation
 boolean gpvol2 = 0;
@@ -17,8 +18,48 @@ boolean gpvol4 = 0;
 boolean gpvol5 = 0;
 boolean gpvol6 = 0;
 
-void setMute(bool mute, int &volume_old, Adafruit_ST7735 &tft, bool force = false){
-  
+void setMute(bool mute, int volume, int &volume_old, Adafruit_ST7735 &tft, bool force);
+void setVol(const int volume, int &volume_old, Adafruit_ST7735 &tft, bool force);
+void setMute(bool mute);
+
+void setMute(bool mute){
+  (mute)?mcpV.digitalWrite(7, LOW):mcpV.digitalWrite(7, HIGH);
+  }
+
+void setMute(bool mute, const int volume, int volume_old, Adafruit_ST7735 &tft, bool force = false){
+  setMute(mute);
+  //(mute)?mcpV.digitalWrite(7, LOW):mcpV.digitalWrite(7, HIGH);
+  if(mute){
+    isMute = true;
+    tft.fillRect(55,17,51,35,ST7735_BLACK);
+    //tft2.fillRect(1,17,51,35,ST7735_BLACK);
+    //tft2.fillRect(1,71,159,36,ST7735_BLACK);
+
+    tft.setCursor(10, 50);
+    tft.setTextColor(textColor);
+    tft.setTextSize(1);
+    tft.println("MUTE");
+    Serial.print("MUTE");
+    Serial.print(gpvol1);
+    Serial.print(gpvol2);
+    Serial.print(gpvol3);
+    Serial.print(gpvol4);
+    Serial.print(gpvol5);
+    Serial.print(gpvol6);
+    Serial.print("\n");
+    }
+  else{
+    isMute = false;
+    setVol(volume, volume_old, tft, true);
+    Serial.print("UNMUTE");
+    Serial.print(gpvol1);
+    Serial.print(gpvol2);
+    Serial.print(gpvol3);
+    Serial.print(gpvol4);
+    Serial.print(gpvol5);
+    Serial.print(gpvol6);
+    Serial.print("\n");
+    }
   }
 
 /*=====================================================
@@ -40,8 +81,8 @@ void setVol(const int volume, int &volume_old, Adafruit_ST7735 &tft, bool force 
         |_|                                 |_|          |__/ 
 ========================================================================*/
   int volume_temp = volume;
-  tft.fillRect(20,17,140,35,ST7735_BLACK);
-  
+  tft.fillRect(1,17,159,35,ST7735_BLACK);
+  (volume == 0)?mcpV.digitalWrite(7, LOW):mcpV.digitalWrite(7, HIGH);
   if (volume == 0) {
     }
   else if (volume > 99) {

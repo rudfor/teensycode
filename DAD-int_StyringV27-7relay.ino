@@ -48,23 +48,6 @@ Adafruit_ST7735 tft2 = Adafruit_ST7735(TFT_CS2,  TFT_DC, TFT_MOSI, TFT_SCK, TFT_
 
 //-------------------------------------MPC23008 code---------------------------------
 // now defined in setVol and setChannel
-/*Adafruit_MCP23008 mcpV;                             //Initiate MCP23008 for Volume attinuation
-Adafruit_MCP23008 mcpK;                             //Initiate MCP23008 for Channel Select
-
-#define mcp1 32                                     // First relay will attenuate by 32db.
-#define mcp2 16                                     // Second relay will attenuate by 16db.
-#define mcp3 8                                      // Third relay will attenuate by 8db.
-#define mcp4 4                                      // Fourth relay will attenuate by 4db.
-#define mcp5 2                                      // Fifth relay will attenuate by 2db.
-#define mcp6 1                                      // Sixth relay will attenuate by 1db.
-
-boolean gpvol1 = 0;                                 //Variables for relay calculation
-boolean gpvol2 = 0;
-boolean gpvol3 = 0;
-boolean gpvol4 = 0;
-boolean gpvol5 = 0;
-boolean gpvol6 = 0;*/
-
 
 //---------------------------------Rotary encoder pinout-------------------------------
 int VOLUPPIN=26;           // RotEnc A terminal for right rotary encoder.
@@ -75,6 +58,8 @@ int newPos;
 
 //---------------------------------Channel Select-------------------------------
 int buttonCounter = 0;
+//int activeChannel= 0;
+int powerButton = 0;
 int channelButton = 1;
 
 boolean ButtonPressed = false;
@@ -103,6 +88,8 @@ int prev_result;
 #define CHD1 0x40A     // Code for Channel DOWN
 #define CHD2 0xC0A     // Code for Channel DOWN
 
+
+bool isOn = false;
 int powerButton2 = 0;
 int mute2 = 0;
 int channelUp2 = 0;
@@ -116,7 +103,6 @@ int mute3 = 0;
 
 //---------------------------------Power ON/OFF Select-------------------------------
 int systemOnOff = 0;
-int powerButton = 0;
 boolean ButtonPressed1 = false;
 boolean Toggle1 = false;
 int Debounce1 = 0;
@@ -180,14 +166,20 @@ void setup() {
 
   irrecv.enableIRIn();              // Start the IR receiver
 
-  mcpK.digitalWrite(buttonCounter, HIGH);
+  mcpK.digitalWrite(1, LOW);
+  mcpK.digitalWrite(2, LOW);
+  mcpK.digitalWrite(3, LOW);
+  mcpK.digitalWrite(0, HIGH);
 
-mcpV.digitalWrite(7, LOW);
-delay(100);
-setVol(0,volume_old,tft2);
-setChannel(true,activeChannel,tft2,true);
+  mcpV.digitalWrite(7, LOW);
+  mcpK.digitalWrite(7, LOW);
+
+  delay(100);
+//setVol(0,volume_old,tft2);
+//setChannel(true,activeChannel,tft2,true);
 //digitalWrite(gpmutepin, LOW);
-pos = digitalRead(VOLUPPIN);
+  tft2.fillScreen(ST7735_BLACK);
+  pos = digitalRead(VOLUPPIN);
 }
 /*=====================================================================
      __              ___    ____  _____ _____ _   _ ____     ____  
@@ -222,24 +214,32 @@ void loop() {
     /*
     if volume up triggered.
     */
-    if (systemOnOff && !mute3) {
+    if (systemOnOff) {
       if (results.value == VOU1 || results.value == VOU2) {
         if (volume < 64)               {volume ++;}
+        if(isMute) {isMute=false;}
         setVol(volume,volume_old,tft2);
         }
-      }
-
-    //if (results.value == VOD1 && systemOnOff == 1 && mute3 == 0|| results.value == VOD2 && systemOnOff == 1 && mute3 == 0) {
-    if (systemOnOff && !mute3) {
       if (results.value == VOD1 || results.value == VOD2) {
         if (volume > 0)                   {volume --;}
+        if(isMute) {isMute=false;}
         setVol(volume,volume_old,tft2);
+        }
+      if (mute2 == 1) {
+        setMute(!isMute, volume, volume_old, tft2);
+        mute2 = 0;
+        }
+      if (channelUp2 == 1 || channelDown2 == 1) {
+        if (channelUp2 != channelDown2){
+          setChannel(channelUp3, activeChannel,tft2);
+          }
+          channelUp2 = 0;
+          channelDown2 = 0;
         }
       }
   prev_result = results.value;
   irrecv.resume(); 
   }
-
 
 //----------------------------System On/Off-------------------------------------------
   if (digitalRead(powerButton)==HIGH || powerButton2 == 1)  {Debounce1++;}
@@ -249,115 +249,34 @@ void loop() {
     Toggle1 = false;
     }
 
-  if (Debounce1 >= 10)                                      {ButtonPressed1 = true;}
+  ButtonPressed1 = (Debounce1 >= 10)?true:false;
   
   if (ButtonPressed1 == true && Toggle1 == false)
     {
     Toggle1 = true;
-
-    systemOnOff = (systemOnOff==0)?1:0;                     //Switch OnOff mode
-  
+    systemOnOff = (systemOnOff==0)?1:0;                     //Switch OnOff mode 
     if (systemOnOff == 1)
       {
       mcpK.digitalWrite(7, HIGH);
-      volume = 0;
+      tft2.fillScreen(ST7735_BLACK);
+      tft2.setRotation(3);
+      setChannel(true,activeChannel,tft2,true);
       setVol(volume,volume_old,tft2);
-  
-      if (buttonCounter == 0) {                                   //how to write channel name after power on
-        tft2.setCursor(13, 105);
-        tft2.setTextColor(textColor);
-        tft2.setTextSize(1);
-        tft2.println(channelName);
-        }
-      else if (buttonCounter == 1) {                  
-        tft2.setCursor(13, 105);
-        tft2.setTextColor(textColor);
-        tft2.setTextSize(1);
-        tft2.println(channelName);
-        }
-      else if (buttonCounter == 2) {                       
-        tft2.setCursor(13, 105);
-        tft2.setTextColor(textColor);
-        tft2.setTextSize(1);
-        tft2.println(channelName);
-        }
-      else if (buttonCounter == 3) {                       
-        tft2.setCursor(30, 105);
-        tft2.setTextColor(textColor);
-        tft2.setTextSize(1);
-        tft2.println(channelName);
-        }
       powerButton2 = 0;
       }
  
   if (systemOnOff == 0){
+    setMute(true);
     mcpV.digitalWrite(7, LOW);
-    //digitalWrite(33, LOW);
     mcpK.digitalWrite(7, LOW);
     tft2.fillScreen(ST7735_BLACK);
     tft2.setRotation(3);
-    delay(20);
-    setChannel(true,activeChannel,tft2,true);
-    setVol(volume,volume_old,tft2,true);
+    //delay(50);
+    //setChannel(true,activeChannel,tft2,true);
+    //setVol(volume,volume_old,tft2,true);
     //tft2.fillRect(55,17,51,35,ST7735_BLACK);
     //tft2.fillRect(55,72,51,35,ST7735_BLACK);
     powerButton2 = 0;
-    }
-  }
-
-//-----------------------------MUTE code----------------------
-if (mute2 == 1 && systemOnOff == 1){
-  if (mute3 == 0) {
-    mute3 = 1;
-    
-    tft2.fillRect(55,17,51,35,ST7735_BLACK);
-    //tft2.fillRect(1,17,51,35,ST7735_BLACK);
-    //tft2.fillRect(1,71,159,36,ST7735_BLACK);
-
-    tft2.setCursor(10, 50);
-    tft2.setTextColor(textColor);
-    tft2.setTextSize(1);
-    tft2.println("MUTE");
-    Serial.print("MUTE");
-    Serial.print(gpvol1);
-    Serial.print(gpvol2);
-    Serial.print(gpvol3);
-    Serial.print(gpvol4);
-    Serial.print(gpvol5);
-    Serial.print(gpvol6);
-    Serial.print("\n");
-    }                      
-   else if (mute3 == 1) {
-    mute3 = 0;
-    //tft2.fillRect(55,17,51,35,ST7735_BLACK);
-    tft2.fillRect(0,17,159,35,ST7735_BLACK);
-    tft2.fillRect(0,0,160,1,ST7735_BLUE);
-    tft2.fillRect(1,1,158,2,ST7735_WHITE);
-    setVol(volume,volume_old,tft2);
-    }
-    mute2 = 0;
-    Serial.print("UNMUTE");
-    Serial.print(gpvol1);
-    Serial.print(gpvol2);
-    Serial.print(gpvol3);
-    Serial.print(gpvol4);
-    Serial.print(gpvol5);
-    Serial.print(gpvol6);
-    Serial.print("\n");
-}
-
-//static int pos = 0;                        // Read the rotary encoder and increase or decrease attenuation.
-
-//------------------------------Mute at 0 Volume-------------------------
-  //if (volume == 0 && systemOnOff == 1 || volume != 0 && mute3 == 1 && systemOnOff == 1) {
-  if (systemOnOff){
-    if (volume==0 || mute3==1){
-      mcpV.digitalWrite(7, LOW);
-      //digitalWrite(gpmutepin, LOW);
-      }
-    else {
-      mcpV.digitalWrite(7, HIGH);
-      //digitalWrite(gpmutepin, HIGH);
     }
   }
 
@@ -385,6 +304,7 @@ if (mute2 == 1 && systemOnOff == 1){
     }
 */
 //-----------------------Channel Debouncer code--------------------------------
+//@deprecated
   if (digitalRead(channelButton)==HIGH && systemOnOff == 1)   {Debounce++;}
   else {
     Debounce = 0;
@@ -399,34 +319,8 @@ if (mute2 == 1 && systemOnOff == 1){
 
 //-----------------------IR Channel Switch code--------------------------------
 
- if (channelUp2 == 1 && systemOnOff == 1)                       {channelUp3 = 1;} 
-
- if (channelDown2 == 1 && systemOnOff == 1 && channelUp2 != 1)  {channelDown3 = 1;} 
-
 //-----------------------Channel Switch Up/Down code--------------------------------
-//if (channelUp3 == 1 || channelDown3 == 1 && channelUp3 != 1){
-// change to exclusive OR
-if (channelUp3 != channelDown3){
-  volume = 0;                                                                             //set volume to 0 after channel switch and write 0 on display
-  setVol(volume,volume_old,tft2);
 
-  if(mute3 == 0){
-    //tft2.fillRect(55,17,51,35,ST7735_BLACK);
-    tft2.fillRect(20,17,140,35,ST7735_BLACK);
-    tft2.setCursor(68, 50);
-    tft2.setTextColor(textColor);
-    tft2.setTextSize(1);
-    tft2.println(volume);
-  }
-    setChannel(channelUp3, activeChannel,tft2);
-    Serial.print(channelName);
-    Serial.print("\n");
-
-    channelUp2 = 0;
-    channelUp3 = 0;
-    channelDown2 = 0;
-    channelDown3 = 0;
-  }
 }
 /*=====================================================
                 _         _               
