@@ -255,29 +255,23 @@ void loop() {
     {
     Toggle1 = true;
     systemOnOff = (systemOnOff==0)?1:0;                     //Switch OnOff mode 
-    if (systemOnOff == 1)
-      {
+    if (systemOnOff == 1){
       mcpK.digitalWrite(7, HIGH);
       tft2.fillScreen(ST7735_BLACK);
       tft2.setRotation(3);
       setChannel(true,activeChannel,tft2,true);
-      setVol(volume,volume_old,tft2);
+      setVol(volume,volume_old,tft2, true);
       powerButton2 = 0;
       }
  
-  if (systemOnOff == 0){
-    setMute(true);
-    mcpV.digitalWrite(7, LOW);
-    mcpK.digitalWrite(7, LOW);
-    tft2.fillScreen(ST7735_BLACK);
-    tft2.setRotation(3);
-    //delay(50);
-    //setChannel(true,activeChannel,tft2,true);
-    //setVol(volume,volume_old,tft2,true);
-    //tft2.fillRect(55,17,51,35,ST7735_BLACK);
-    //tft2.fillRect(55,72,51,35,ST7735_BLACK);
-    powerButton2 = 0;
-    }
+    if (systemOnOff == 0){
+      setMute(true);
+      mcpV.digitalWrite(7, LOW);
+      mcpK.digitalWrite(7, LOW);
+      tft2.fillScreen(ST7735_BLACK);
+      tft2.setRotation(3);
+      powerButton2 = 0;
+      }
   }
 
  //-----------------------Rotary encoder Volume Up/Down----------------------------
