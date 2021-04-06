@@ -231,7 +231,7 @@ void loop() {
         }
       if (channelUp2 == 1 || channelDown2 == 1) {
         if (channelUp2 != channelDown2){
-          setChannel(channelUp3, activeChannel,tft2);
+          setChannel(channelUp2, activeChannel,tft2);
           }
           channelUp2 = 0;
           channelDown2 = 0;
